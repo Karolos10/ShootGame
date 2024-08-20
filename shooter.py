@@ -33,6 +33,11 @@ class Player(pygame.sprite.Sprite):
             self.rect.right = WIDTH
         if self.rect.left < 0:
             self.rect.left = 0
+    
+    def shoot(self):
+        bullet = Bullet(self.rect.centerx, self.rect.top)
+        all_sprites.add(bullet)
+        bullets.add(bullet)
             
 class Meteor(pygame.sprite.Sprite):
     def __init__(self):
@@ -53,10 +58,26 @@ class Meteor(pygame.sprite.Sprite):
             self.rect.y = random.randrange(-100, -40)
             self.speedy = random.randrange(1, 10)
 
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.image.load("assets/laser1.png").convert()
+        self.image.set_colorkey(BLACK)
+        self.rect = self.image.get_rect()
+        self.rect.y = y
+        self.rect.centerx = x
+        self.speedy = -10
+    
+    def update(self):
+        self.rect.y += self.speedy
+        if self.rect.bottom < 0:
+            self.kill()
+
 background = pygame.image.load("assets/background.png").convert()
 
 all_sprites = pygame.sprite.Group()
 meteor_list = pygame.sprite.Group()
+bullets = pygame.sprite.Group()
 
 player = Player()
 all_sprites.add(player)
@@ -71,8 +92,21 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                player.shoot()
 
     all_sprites.update()
+    
+    hits = pygame.sprite.groupcollide(meteor_list, bullets, True, True)
+    for hit in hits:
+        meteor = Meteor()
+        all_sprites.add(meteor)
+        meteor_list.add(meteor)
+    
+    hits = pygame.sprite.spritecollide(player, meteor_list, True)
+    if hits:
+        running = False
     screen.blit(background, [0, 0])
     all_sprites.draw(screen)
     pygame.display.flip()
