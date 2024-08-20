@@ -5,12 +5,14 @@ HEIGHT = 600
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
+#Initialize Pygame
 pygame.init()
 pygame.mixer.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Shooter")
 clock = pygame.time.Clock()
 
+#Function to draw text on screen
 def draw_text(surf, text, size, x, y):
     font = pygame.font.SysFont("serif", size)
     text_surface = font.render(text, True, WHITE)
@@ -18,6 +20,7 @@ def draw_text(surf, text, size, x, y):
     text_rect.midtop = (x, y)
     surf.blit(text_surface, text_rect)
 
+#Player class
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -45,7 +48,9 @@ class Player(pygame.sprite.Sprite):
         bullet = Bullet(self.rect.centerx, self.rect.top)
         all_sprites.add(bullet)
         bullets.add(bullet)
-            
+        laser_sound.play()
+ 
+#Meteor class           
 class Meteor(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -65,6 +70,7 @@ class Meteor(pygame.sprite.Sprite):
             self.rect.y = random.randrange(-100, -40)
             self.speedy = random.randrange(1, 10)
 
+#Bullet class
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
@@ -91,22 +97,36 @@ for img in meteor_list:
 #Load background image
 background = pygame.image.load("assets/background.png").convert()
 
+#Load sound
+laser_sound = pygame.mixer.Sound("assets/laser5.ogg")
+expl_sound = pygame.mixer.Sound("assets/explosion.wav")
+pygame.mixer.music.load("assets/music.ogg")
+pygame.mixer.music.set_volume(0.5)
+
+#Create sprite groups
 all_sprites = pygame.sprite.Group()
 meteor_list = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
 
+#Create player object
 player = Player()
 all_sprites.add(player)
+#Create meteor objects
 for i in range(8):
     meteor = Meteor()
     all_sprites.add(meteor)
     meteor_list.add(meteor)
-    
-score = 0
 
+#Game loop    
+score = 0
+pygame.mixer.music.play(loops=-1)
+
+#Game loop
 running = True
+
+#Game loop
 while running:
-    clock.tick(30)
+    clock.tick(10)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -116,9 +136,11 @@ while running:
 
     all_sprites.update()
     
+    #Check if bullet hits meteor
     hits = pygame.sprite.groupcollide(meteor_list, bullets, True, True)
     for hit in hits:
         score += 10
+        expl_sound.play()
         meteor = Meteor()
         all_sprites.add(meteor)
         meteor_list.add(meteor)
