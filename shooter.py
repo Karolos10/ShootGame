@@ -4,6 +4,7 @@ WIDTH = 800
 HEIGHT = 600
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
 
 #Initialize Pygame
 pygame.init()
@@ -19,6 +20,18 @@ def draw_text(surf, text, size, x, y):
     text_rect = text_surface.get_rect()
     text_rect.midtop = (x, y)
     surf.blit(text_surface, text_rect)
+    
+#Function to draw shield bar
+def draw_shield_bar(surface, x, y, pct):
+    if pct < 0:
+        pct = 0
+    BAR_LENGTH = 100
+    BAR_HEIGHT = 10
+    fill = (pct / 100) * BAR_LENGTH
+    outline_rect = pygame.Rect(x, y, BAR_LENGTH, BAR_HEIGHT)
+    fill_rect = pygame.Rect(x, y, fill, BAR_HEIGHT)
+    pygame.draw.rect(surface, GREEN, fill_rect)
+    pygame.draw.rect(surface, WHITE, outline_rect, 2)
 
 #Player class
 class Player(pygame.sprite.Sprite):
@@ -30,6 +43,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.centerx = WIDTH // 2
         self.rect.bottom = HEIGHT - 10
         self.speedx = 0
+        self.shield = 100
     
     def update(self):
         self.speedx = 0
@@ -112,10 +126,15 @@ bullets = pygame.sprite.Group()
 player = Player()
 all_sprites.add(player)
 #Create meteor objects
-for i in range(8):
+
+#Creating meteor objects
+def create_meteor():
     meteor = Meteor()
     all_sprites.add(meteor)
     meteor_list.add(meteor)
+    
+for i in range(8):
+    create_meteor()
 
 #Game loop    
 score = 0
@@ -126,7 +145,7 @@ running = True
 
 #Game loop
 while running:
-    clock.tick(10)
+    clock.tick(40)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -141,18 +160,22 @@ while running:
     for hit in hits:
         score += 10
         expl_sound.play()
-        meteor = Meteor()
-        all_sprites.add(meteor)
-        meteor_list.add(meteor)
+        create_meteor()
     
+    #Check if meteor hits player
     hits = pygame.sprite.spritecollide(player, meteor_list, True)
-    if hits:
-        running = False
+    for hit in hits:
+        player.shield -= 25
+        if player.shield <= 0:
+            running = False
     screen.blit(background, [0, 0])
     all_sprites.draw(screen)
     
     #Score
     draw_text(screen, str(score), 25, WIDTH // 2, 10)
+    
+    #Shield
+    draw_shield_bar(screen, 5, 5, player.shield)
     
     pygame.display.flip()
 pygame.quit()
