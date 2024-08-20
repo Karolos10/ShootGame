@@ -124,6 +124,21 @@ class Explosion(pygame.sprite.Sprite):
                 self.rect = self.image.get_rect()
                 self.rect.center = center
 
+def show_go_screen():
+    screen.blit(background, [0, 0])
+    draw_text(screen, "SHOOTER", 64, WIDTH // 2, HEIGHT // 4)
+    draw_text(screen, "Arrow keys to move, Space to fire", 22, WIDTH // 2, HEIGHT // 2)
+    draw_text(screen, "Press a key to begin", 18, WIDTH // 2, HEIGHT * 3 / 4)
+    pygame.display.flip()
+    waiting = True
+    while waiting:
+        clock.tick(20)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.KEYUP:
+                waiting = False
+
 meteor_images = []
 meteor_list = ["assets/meteorGrey_big1.png", "assets/meteorGrey_big2.png", "assets/meteorGrey_big3.png", "assets/meteorGrey_big4.png",
 				"assets/meteorGrey_med1.png", "assets/meteorGrey_med2.png", "assets/meteorGrey_small1.png", "assets/meteorGrey_small2.png",
@@ -151,15 +166,7 @@ expl_sound = pygame.mixer.Sound("assets/explosion.wav")
 pygame.mixer.music.load("assets/music.ogg")
 pygame.mixer.music.set_volume(0.5)
 
-#Create sprite groups
-all_sprites = pygame.sprite.Group()
-meteor_list = pygame.sprite.Group()
-bullets = pygame.sprite.Group()
 
-#Create player object
-player = Player()
-all_sprites.add(player)
-#Create meteor objects
 
 #Creating meteor objects
 def create_meteor():
@@ -167,18 +174,39 @@ def create_meteor():
     all_sprites.add(meteor)
     meteor_list.add(meteor)
     
-for i in range(8):
-    create_meteor()
 
-#Game loop    
-score = 0
+
+#Game Over
+
+
 pygame.mixer.music.play(loops=-1)
 
 #Game loop
+game_over = True
 running = True
 
 #Game loop
 while running:
+    if game_over:
+        show_go_screen()
+        
+        game_over = False
+        #Create sprite groups
+        all_sprites = pygame.sprite.Group()
+        meteor_list = pygame.sprite.Group()
+        bullets = pygame.sprite.Group()
+
+        #Create player object
+        player = Player()
+        all_sprites.add(player)
+#       Create meteor objects
+
+        for i in range(8):
+            create_meteor()
+
+        #Game loop    
+        score = 0
+        
     clock.tick(40)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -203,7 +231,7 @@ while running:
     for hit in hits:
         player.shield -= 25
         if player.shield <= 0:
-            running = False
+            game_over = True
     screen.blit(background, [0, 0])
     all_sprites.draw(screen)
     
